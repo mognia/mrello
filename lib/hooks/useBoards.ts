@@ -1,7 +1,7 @@
 "use client"
-import {boardDataService} from "@/lib/service";
+import {boardDataService, boardService} from "@/lib/service";
 import { useUser } from "@clerk/nextjs";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Board} from "@/lib/supabase/models";
 import {useSupabase} from "@/lib/supabase/SupabaseProvider";
 export function useBoards() {
@@ -10,7 +10,26 @@ export function useBoards() {
     const [boards, setBoards] = useState<Board[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    useEffect(() => {
+        if (user) {
+            loadBoards();
+        }
+    }, [user, supabase]);
 
+    async function loadBoards() {
+        if (!user) return;
+
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await boardService.getBoards(supabase!, user.id);
+            setBoards(data);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to load boards.");
+        } finally {
+            setLoading(false);
+        }
+    }
     async function createBoard(boardData: {
         title: string;
         description?: string;
