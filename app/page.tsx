@@ -3,13 +3,17 @@
 import Image from "next/image";
 import Navbar from "@/components/navbar";
 import {useUser} from "@clerk/nextjs";
-import {Loader2, Plus, Rocket, Trello} from "lucide-react";
+import {Filter, Grid3x3, List, Loader2, Plus, Rocket, Trello} from "lucide-react";
 import {useBoards} from "@/lib/hooks/useBoards";
 import {Card, CardContent} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {useState} from "react";
 
 export default function Home() {
     const {user} = useUser()
     const {createBoard, boards,loading,error} = useBoards()
+    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
     const handleCreateBoard = async () => {
         await createBoard({ title: "New Board" });
 
@@ -35,10 +39,6 @@ export default function Home() {
                     Here&#39;s what&#39;s happening with your boards today.
                 </p>
 
-                <button className='w-full sm:w-auto' onClick={handleCreateBoard}>
-                    <Plus className='h-4 w-4 mr-2'/>
-                    Create Board
-                </button>
             </div>
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -118,6 +118,50 @@ export default function Home() {
                     </CardContent>
                 </Card>
             </div>
+            {/* Boards */}
+            <div className="mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-4 sm:space-y-0">
+                    <div>
+                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                            Your Boards
+                        </h2>
+                        <p className="text-gray-600">Manage your projects and tasks</p>
+
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                        <div className="flex items-center space-x-2 rounded bg-white border p-1">
+                            <Button
+                                variant={viewMode === "grid" ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => setViewMode("grid")}
+                            >
+                                <Grid3x3 />
+                            </Button>
+                            <Button
+                                variant={viewMode === "list" ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => setViewMode("list")}
+                            >
+                                <List />
+                            </Button>
+                        </div>
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                        >
+                            <Filter />
+                            Filter
+                        </Button>
+
+                        <Button onClick={handleCreateBoard}>
+                            <Plus />
+                            Create Board
+                        </Button>
+                    </div>
+                </div>
+                </div>
         </main>
       </div>
   );
