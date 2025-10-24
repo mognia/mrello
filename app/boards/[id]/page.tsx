@@ -8,7 +8,7 @@ import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {DialogTrigger} from "@radix-ui/react-dialog";
-import {Plus} from "lucide-react";
+import {MoreHorizontal, Plus} from "lucide-react";
 import {Textarea} from "@/components/ui/textarea";
 import {
     Select,
@@ -17,9 +17,51 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { ColumnWithTasks} from "@/lib/supabase/models";
+import {a} from "@clerk/shared/clerkApiResponseError-CpTaa-eQ";
+import {Badge} from "@/components/ui/badge";
+
+function Column ({column,children,onCreateTask,onEditTask}:{
+    column:ColumnWithTasks;
+    children:React.ReactNode;
+    onCreateTask:(taskData:a)=>Promise<void>;
+onEditTask:(column:ColumnWithTasks)=>void;}) {
+
+    return (
+        <div>
+            <div      className={`bg-white rounded-lg shadow-sm border`}>
+            {/*    column Header*/}
+                <div className="p-3 sm:p-4 border-b">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                                {column.title}
+                            </h3>
+                            <Badge variant="secondary" className="text-xs flex-shrink-0">
+                                {column.tasks.length}
+                            </Badge>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex-shrink-0"
+
+                        >
+                            <MoreHorizontal />
+                        </Button>
+                    </div>
+                </div>
+                {/* column content */}
+                <div className={'pt-2'}>{children}</div>
+
+            </div>
+        </div>
+    )
+}
+
 export default function BoardPage() {
     const {id} = useParams<{id:string}>();
-    const {board,updateBoard,columns} = useBoard(id);
+    const {board,updateBoard,columns,createRealTask} = useBoard(id);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [newTitle, setNewTitle] = useState("");
     const [newColor, setNewColor] = useState("");
@@ -63,7 +105,21 @@ export default function BoardPage() {
             dueDate: null as string | null,
         });
     }
-    async function handleCreateTask(e: any) {
+    async function createTask(taskData: {
+        title: string;
+        description?: string;
+        assignee?: string;
+        dueDate?: string;
+        priority: "low" | "medium" | "high";
+    }) {
+        const targetColumn = columns[0];
+        if (!targetColumn) {
+            throw new Error("No column available to add task");
+        }
+
+        await createRealTask(targetColumn.id, taskData);
+    }
+    async function handleCreateTask(e:any) {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const taskData = {
@@ -76,7 +132,7 @@ export default function BoardPage() {
         };
 
         if (taskData.title.trim()) {
-            // await createTask(taskData);
+            await createTask(taskData);
 
             const trigger = document.querySelector(
                 '[data-state="open"]'
@@ -84,6 +140,7 @@ export default function BoardPage() {
             if (trigger) trigger.click();
         }
     }
+
     return (
         <div>
             <Navbar
@@ -302,6 +359,18 @@ export default function BoardPage() {
                             </form>
                         </DialogContent>
                     </Dialog>
+                </div>
+                {/* Board Columns */}
+                <div>
+                    {columns.map((column,key) => (
+                        <Column column={column} key={key} onEditTask={()=>{}} onCreateTask={()=>{}}>
+                            <div>
+                                {column.tasks.map((task,key) => (
+                                    <div key={key}>{task.title}</div>
+                                ))}
+                            </div>
+                        </Column>
+                    ))}
                 </div>
             </main>
         </div>

@@ -103,6 +103,20 @@ export const taskService = {
 
         return data || [];
     },
+    async createTask(
+        supabase: SupabaseClient,
+        task: Omit<Task, "id" | "created_at" | "updated_at">
+    ): Promise<Task> {
+        const { data, error } = await supabase
+            .from("tasks")
+            .insert(task)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return data;
+    },
 };
 export const boardDataService = {
     async createBoardWithDefaultColumns(supabase: SupabaseClient,
