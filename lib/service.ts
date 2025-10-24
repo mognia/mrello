@@ -83,6 +83,27 @@ export const columnService = {
         return data;
     },
 }
+export const taskService = {
+    async getTasksByBoard(
+        supabase: SupabaseClient,
+        boardId: string
+    ): Promise<Task[]> {
+        const { data, error } = await supabase
+            .from("tasks")
+            .select(
+                `
+        *,
+        columns!inner(board_id)
+        `
+            )
+            .eq("columns.board_id", boardId)
+            .order("sort_order", { ascending: true });
+
+        if (error) throw error;
+
+        return data || [];
+    },
+};
 export const boardDataService = {
     async createBoardWithDefaultColumns(supabase: SupabaseClient,
         boardData: {
@@ -126,11 +147,16 @@ export const boardDataService = {
         ]);
 
         if (!board) throw new Error("Board not found");
+        const tasks = await taskService.getTasksByBoard(supabase, boardId);
 
+        const columnsWithTasks = columns.map((column) => ({
+            ...column,
+            tasks: tasks.filter((task) => task.column_id === column.id),
+        }));
 
         return {
             board,
-            columns,
+            columnsWithTasks,
         };
     },
 }

@@ -57,7 +57,7 @@ export function useBoard(boardId: string) {
     const {user} = useUser();
 
     const [board, setBoard] = useState<Board | null>(null);
-    const [columns, setColumns] = useState<Column[]>([]);
+    const [columns, setColumns] = useState<ColumnWithTasks[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     useEffect(() => {
@@ -77,7 +77,7 @@ export function useBoard(boardId: string) {
                 boardId
             );
             setBoard(data.board);
-            setColumns(data.columns);
+            setColumns(data.columnsWithTasks);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to load boards.");
         } finally {
