@@ -17,20 +17,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { ColumnWithTasks, Task} from "@/lib/supabase/models";
+import {ColumnWithTasks, Task as TaskType} from "@/lib/supabase/models";
 import {a} from "@clerk/shared/clerkApiResponseError-CpTaa-eQ";
 import {Badge} from "@/components/ui/badge";
 import {Card, CardContent} from "@/components/ui/card";
-function Column ({column,children,onCreateTask,onEditTask}:{
-    column:ColumnWithTasks;
-    children:React.ReactNode;
-    onCreateTask:(taskData:a)=>Promise<void>;
-onEditTask:(column:ColumnWithTasks)=>void;}) {
+
+function Column({column, children, onCreateTask, onEditTask}: {
+    column: ColumnWithTasks;
+    children: React.ReactNode;
+    onCreateTask: (taskData: a) => Promise<void>;
+    onEditTask: (column: ColumnWithTasks) => void;
+}) {
 
     return (
         <div>
-            <div      className={`bg-white rounded-lg shadow-sm border`}>
-            {/*    column Header*/}
+            <div className={`bg-white rounded-lg shadow-sm border`}>
+                {/*    column Header*/}
                 <div className="p-3 sm:p-4 border-b">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 min-w-0">
@@ -47,19 +49,89 @@ onEditTask:(column:ColumnWithTasks)=>void;}) {
                             className="flex-shrink-0"
 
                         >
-                            <MoreHorizontal />
+                            <MoreHorizontal/>
                         </Button>
                     </div>
                 </div>
                 {/* column content */}
                 <div className={'pt-2'}>{children}</div>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="ghost"
+                                className="w-full mt-3 text-gray-500 hover:text-gray-700 cursor-pointer">
+                            <Plus/>
+                            Add Task
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-[95vw] max-w-[425px] mx-auto">
+                        <DialogHeader>
+                            <DialogTitle>Create New Task</DialogTitle>
+                            <p className="text-sm text-gray-600">
+                                Add a task to the board
+                            </p>
+                        </DialogHeader>
 
+                        <form className="space-y-4" onSubmit={onCreateTask}>
+                            <div className="space-y-2">
+                                <Label>Title *</Label>
+                                <Input
+                                    id="title"
+                                    name="title"
+                                    placeholder="Enter task title"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Description</Label>
+                                <Textarea
+                                    id="description"
+                                    name="description"
+                                    placeholder="Enter task description"
+                                    rows={3}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Assignee</Label>
+                                <Input
+                                    id="assignee"
+                                    name="assignee"
+                                    placeholder="Who should do this?"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Priority</Label>
+                                <Select name="priority" defaultValue="medium">
+                                    <SelectTrigger>
+                                        <SelectValue/>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {["low", "medium", "high"].map((priority, key) => (
+                                            <SelectItem key={key} value={priority}>
+                                                {priority.charAt(0).toUpperCase() +
+                                                    priority.slice(1)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Due Date</Label>
+                                <Input type="date" id="dueDate" name="dueDate"/>
+                            </div>
+
+                            <div className="flex justify-end space-x-2 pt-4">
+                                <Button type="submit">Create Task</Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </div>
     )
 }
 
-function Task ({ task }: { task: Task }) {
+function Task({task}: { task: TaskType }) {
 
     function getPriorityColor(priority: "low" | "medium" | "high"): string {
         switch (priority) {
@@ -73,8 +145,9 @@ function Task ({ task }: { task: Task }) {
                 return "bg-yellow-500";
         }
     }
+
     return (
-        <div >
+        <div>
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-3 sm:p-4">
                     <div className="space-y-2 sm:space-y-3">
@@ -95,13 +168,13 @@ function Task ({ task }: { task: Task }) {
                             <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
                                 {task.assignee && (
                                     <div className="flex items-center space-x-1 text-xs text-gray-500">
-                                        <User className="h-3 w-3" />
+                                        <User className="h-3 w-3"/>
                                         <span className="truncate">{task.assignee}</span>
                                     </div>
                                 )}
                                 {task.due_date && (
                                     <div className="flex items-center space-x-1 text-xs text-gray-500">
-                                        <Calendar className="h-3 w-3" />
+                                        <Calendar className="h-3 w-3"/>
                                         <span className="truncate">{task.due_date}</span>
                                     </div>
                                 )}
@@ -120,8 +193,8 @@ function Task ({ task }: { task: Task }) {
 }
 
 export default function BoardPage() {
-    const {id} = useParams<{id:string}>();
-    const {board,updateBoard,columns,createRealTask} = useBoard(id);
+    const {id} = useParams<{ id: string }>();
+    const {board, updateBoard, columns, createRealTask} = useBoard(id);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [newTitle, setNewTitle] = useState("");
     const [newColor, setNewColor] = useState("");
@@ -134,6 +207,7 @@ export default function BoardPage() {
         assignee: [] as string[],
         dueDate: null as string | null,
     });
+
     async function handleUpdateBoard(e: React.FormEvent) {
         e.preventDefault();
 
@@ -145,7 +219,8 @@ export default function BoardPage() {
                 color: newColor || board.color,
             });
             setIsEditingTitle(false);
-        } catch {}
+        } catch {
+        }
     }
 
     function handleFilterChange(
@@ -165,6 +240,7 @@ export default function BoardPage() {
             dueDate: null as string | null,
         });
     }
+
     async function createTask(taskData: {
         title: string;
         description?: string;
@@ -179,7 +255,8 @@ export default function BoardPage() {
 
         await createRealTask(targetColumn.id, taskData);
     }
-    async function handleCreateTask(e:any) {
+
+    async function handleCreateTask(e: any) {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const taskData = {
@@ -210,7 +287,9 @@ export default function BoardPage() {
                     setNewColor(board?.color ?? "");
                     setIsEditingTitle(true);
                 }}
-                onFilterClick={() => {setIsFilterOpen(true);}}
+                onFilterClick={() => {
+                    setIsFilterOpen(true);
+                }}
                 filterCount={2}
             />
             <Dialog open={isEditingTitle} onOpenChange={setIsEditingTitle}>
@@ -341,7 +420,8 @@ export default function BoardPage() {
             {/* Board Content */}
             <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
                 {/* Stats */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
+                <div
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
                     <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                         <div className="text-sm text-gray-600">
                             <span className="font-medium">Total Tasks: </span>
@@ -352,7 +432,7 @@ export default function BoardPage() {
                     <Dialog>
                         <DialogTrigger asChild>
                             <Button className="w-full sm:w-auto">
-                                <Plus />
+                                <Plus/>
                                 Add Task
                             </Button>
                         </DialogTrigger>
@@ -395,7 +475,7 @@ export default function BoardPage() {
                                     <Label>Priority</Label>
                                     <Select name="priority" defaultValue="medium">
                                         <SelectTrigger>
-                                            <SelectValue />
+                                            <SelectValue/>
                                         </SelectTrigger>
                                         <SelectContent>
                                             {["low", "medium", "high"].map((priority, key) => (
@@ -410,7 +490,7 @@ export default function BoardPage() {
 
                                 <div className="space-y-2">
                                     <Label>Due Date</Label>
-                                    <Input type="date" id="dueDate" name="dueDate" />
+                                    <Input type="date" id="dueDate" name="dueDate"/>
                                 </div>
 
                                 <div className="flex justify-end space-x-2 pt-4">
@@ -426,13 +506,14 @@ export default function BoardPage() {
             lg:[&::-webkit-scrollbar-track]:bg-gray-100
             lg:[&::-webkit-scrollbar-thumb]:bg-gray-300 lg:[&::-webkit-scrollbar-thumb]:rounded-full
             space-y-4 lg:space-y-0">
-                    {columns.map((column,key) => (
-                        <Column column={column} key={key} onEditTask={()=>{}} onCreateTask={()=>{}}>
+                    {columns.map((column, key) => (
+                        <Column column={column} key={key} onEditTask={() => {
+                        }} onCreateTask={handleCreateTask}>
                             <div className="space-y-3">
-                                {column.tasks.map((task,key) => (
+                                {column.tasks.map((task, key) => (
                                     <div key={key}>
-                                        <Task task={task} key={key} />
-                                        </div>
+                                        <Task task={task} key={key}/>
+                                    </div>
                                 ))}
                             </div>
                         </Column>
