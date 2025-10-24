@@ -8,7 +8,7 @@ import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {DialogTrigger} from "@radix-ui/react-dialog";
-import {MoreHorizontal, Plus} from "lucide-react";
+import {Calendar, MoreHorizontal, Plus, User} from "lucide-react";
 import {Textarea} from "@/components/ui/textarea";
 import {
     Select,
@@ -17,10 +17,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { ColumnWithTasks} from "@/lib/supabase/models";
+import { ColumnWithTasks, Task} from "@/lib/supabase/models";
 import {a} from "@clerk/shared/clerkApiResponseError-CpTaa-eQ";
 import {Badge} from "@/components/ui/badge";
-
+import {Card, CardContent} from "@/components/ui/card";
 function Column ({column,children,onCreateTask,onEditTask}:{
     column:ColumnWithTasks;
     children:React.ReactNode;
@@ -55,6 +55,66 @@ onEditTask:(column:ColumnWithTasks)=>void;}) {
                 <div className={'pt-2'}>{children}</div>
 
             </div>
+        </div>
+    )
+}
+
+function Task ({ task }: { task: Task }) {
+
+    function getPriorityColor(priority: "low" | "medium" | "high"): string {
+        switch (priority) {
+            case "high":
+                return "bg-red-500";
+            case "medium":
+                return "bg-yellow-500";
+            case "low":
+                return "bg-green-500";
+            default:
+                return "bg-yellow-500";
+        }
+    }
+    return (
+        <div >
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardContent className="p-3 sm:p-4">
+                    <div className="space-y-2 sm:space-y-3">
+                        {/* Task Header */}
+                        <div className="flex items-start justify-between">
+                            <h4 className="font-medium text-gray-900 text-sm leading-tight flex-1 min-w-0 pr-2">
+                                {task.title}
+                            </h4>
+                        </div>
+
+                        {/* Task Description */}
+                        <p className="text-xs text-gray-600 line-clamp-2">
+                            {task.description || "No description."}
+                        </p>
+
+                        {/* Task Meta */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
+                                {task.assignee && (
+                                    <div className="flex items-center space-x-1 text-xs text-gray-500">
+                                        <User className="h-3 w-3" />
+                                        <span className="truncate">{task.assignee}</span>
+                                    </div>
+                                )}
+                                {task.due_date && (
+                                    <div className="flex items-center space-x-1 text-xs text-gray-500">
+                                        <Calendar className="h-3 w-3" />
+                                        <span className="truncate">{task.due_date}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div
+                                className={`w-2 h-2 rounded-full flex-shrink-0 ${getPriorityColor(
+                                    task.priority
+                                )}`}
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     )
 }
@@ -361,12 +421,18 @@ export default function BoardPage() {
                     </Dialog>
                 </div>
                 {/* Board Columns */}
-                <div>
+                <div className="flex flex-col lg:flex-row lg:space-x-6 lg:overflow-x-auto
+            lg:pb-6 lg:px-2 lg:-mx-2 lg:[&::-webkit-scrollbar]:h-2
+            lg:[&::-webkit-scrollbar-track]:bg-gray-100
+            lg:[&::-webkit-scrollbar-thumb]:bg-gray-300 lg:[&::-webkit-scrollbar-thumb]:rounded-full
+            space-y-4 lg:space-y-0">
                     {columns.map((column,key) => (
                         <Column column={column} key={key} onEditTask={()=>{}} onCreateTask={()=>{}}>
-                            <div>
+                            <div className="space-y-3">
                                 {column.tasks.map((task,key) => (
-                                    <div key={key}>{task.title}</div>
+                                    <div key={key}>
+                                        <Task task={task} key={key} />
+                                        </div>
                                 ))}
                             </div>
                         </Column>
