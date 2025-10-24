@@ -14,6 +14,15 @@ export default function BoardPage() {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [newTitle, setNewTitle] = useState("");
     const [newColor, setNewColor] = useState("");
+
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+
+    const [filters, setFilters] = useState({
+        priority: [] as string[],
+        assignee: [] as string[],
+        dueDate: null as string | null,
+    });
     async function handleUpdateBoard(e: React.FormEvent) {
         e.preventDefault();
 
@@ -27,6 +36,24 @@ export default function BoardPage() {
             setIsEditingTitle(false);
         } catch {}
     }
+
+    function handleFilterChange(
+        type: "priority" | "assignee" | "dueDate",
+        value: string | string[] | null
+    ) {
+        setFilters((prev) => ({
+            ...prev,
+            [type]: value,
+        }));
+    }
+
+    function clearFilters() {
+        setFilters({
+            priority: [] as string[],
+            assignee: [] as string[],
+            dueDate: null as string | null,
+        });
+    }
     return (
         <div>
             <Navbar
@@ -36,6 +63,8 @@ export default function BoardPage() {
                     setNewColor(board?.color ?? "");
                     setIsEditingTitle(true);
                 }}
+                onFilterClick={() => {setIsFilterOpen(true);}}
+                filterCount={2}
             />
             <Dialog open={isEditingTitle} onOpenChange={setIsEditingTitle}>
                 <DialogContent className="w-[95vw] max-w-[425px] mx-auto">
@@ -96,6 +125,69 @@ export default function BoardPage() {
                             <Button type="submit">Save Changes</Button>
                         </div>
                     </form>
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <DialogContent className="w-[95vw] max-w-[425px] mx-auto">
+                    <DialogHeader>
+                        <DialogTitle>Filter Tasks</DialogTitle>
+                        <p className="text-sm text-gray-600">
+                            Filter tasks by priority, assignee, or due date
+                        </p>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Priority</Label>
+                            <div className="flex flex-wrap gap-2">
+                                {["low", "medium", "high"].map((priority, key) => (
+                                    <Button
+                                        onClick={() => {
+                                            const newPriorities = filters.priority.includes(
+                                                priority
+                                            )
+                                                ? filters.priority.filter((p) => p !== priority)
+                                                : [...filters.priority, priority];
+
+                                            handleFilterChange("priority", newPriorities);
+                                        }}
+                                        key={key}
+                                        variant={
+                                            filters.priority.includes(priority)
+                                                ? "default"
+                                                : "outline"
+                                        }
+                                        size="sm"
+                                    >
+                                        {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Due Date</Label>
+                            <Input
+                                type="date"
+                                value={filters.dueDate || ""}
+                                onChange={(e) =>
+                                    handleFilterChange("dueDate", e.target.value || null)
+                                }
+                            />
+                        </div>
+
+                        <div className="flex justify-between pt-4">
+                            <Button
+                                type="button"
+                                variant={"outline"}
+                                onClick={clearFilters}
+                            >
+                                Clear Filters
+                            </Button>
+                            <Button type="button" onClick={() => setIsFilterOpen(false)}>
+                                Apply Filters
+                            </Button>
+                        </div>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>
