@@ -21,7 +21,7 @@ export default function Home() {
 
     }
     if (loading) {
-        return <div><Loader2/> Loading Your Boards....</div>
+        // return <div><Loader2/> Loading Your Boards....</div>
     }
     if (error) {
         return <div>

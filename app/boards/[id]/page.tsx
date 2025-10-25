@@ -34,11 +34,11 @@ import {SortableContext, useSortable, verticalListSortingStrategy} from "@dnd-ki
 import { CSS } from "@dnd-kit/utilities";
 import {taskService} from "@/lib/service";
 
-function DroppableColumn({column, children, onCreateTask, onEditTask}: {
+function DroppableColumn({column, children, onCreateTask, onEditColumn}: {
     column: ColumnWithTasks;
     children: React.ReactNode;
     onCreateTask: (taskData: a) => Promise<void>;
-    onEditTask: (column: ColumnWithTasks) => void;
+    onEditColumn: (column: ColumnWithTasks) => void;
 }) {
     const {setNodeRef, isOver} = useDroppable({id: column.id});
     return (
@@ -62,7 +62,7 @@ function DroppableColumn({column, children, onCreateTask, onEditTask}: {
                             variant="ghost"
                             size="sm"
                             className="flex-shrink-0"
-
+                            onClick={() => onEditColumn(column)}
                         >
                             <MoreHorizontal/>
                         </Button>
@@ -278,11 +278,16 @@ function TaskOverlay({ task }: { task: Task }) {
 }
 export default function BoardPage() {
     const {id} = useParams<{ id: string }>();
-    const {board, updateBoard, columns, setColumns,createRealTask,moveTask} = useBoard(id);
+    const {board, updateBoard, columns, setColumns,createRealTask,moveTask,updateColumn} = useBoard(id);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [newTitle, setNewTitle] = useState("");
     const [newColor, setNewColor] = useState("");
-
+    const [isEditingColumn, setIsEditingColumn] = useState(false);
+    const [newColumnTitle, setNewColumnTitle] = useState("");
+    const [editingColumnTitle, setEditingColumnTitle] = useState("");
+    const [editingColumn, setEditingColumn] = useState<ColumnWithTasks | null>(
+        null
+    );
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -472,9 +477,24 @@ export default function BoardPage() {
             }
         }
     }
+    function handleEditColumn(column: ColumnWithTasks) {
+        setIsEditingColumn(true);
+        setEditingColumn(column);
+        setEditingColumnTitle(column.title);
+    }
+    async function handleUpdateColumn(e: React.FormEvent) {
+        e.preventDefault();
 
+        if (!editingColumnTitle.trim() || !editingColumn) return;
 
+        await updateColumn(editingColumn.id, editingColumnTitle.trim());
+
+        setEditingColumnTitle("");
+        setIsEditingColumn(false);
+        setEditingColumn(null);
+    }
     return (
+        <>
         <div>
             <Navbar
                 boardTitle={board?.title}
@@ -709,8 +729,7 @@ export default function BoardPage() {
             lg:[&::-webkit-scrollbar-thumb]:bg-gray-300 lg:[&::-webkit-scrollbar-thumb]:rounded-full
             space-y-4 lg:space-y-0">
                         {columns.map((column, key) => (
-                            <DroppableColumn column={column} key={key} onEditTask={() => {
-                            }} onCreateTask={handleCreateTask}>
+                            <DroppableColumn column={column} key={key} onEditColumn={handleEditColumn} onCreateTask={handleCreateTask} >
                                 <SortableContext items={column.tasks.map((task)=> task.id)} strategy={verticalListSortingStrategy}>
 
                                     <div className="space-y-3">
@@ -730,5 +749,42 @@ export default function BoardPage() {
                 </DndContext>
             </main>
         </div>
+    <Dialog open={isEditingColumn} onOpenChange={setIsEditingColumn}>
+        <DialogContent className="w-[95vw] max-w-[425px] mx-auto">
+            <DialogHeader>
+                <DialogTitle>Edit Column</DialogTitle>
+                <p className="text-sm text-gray-600">
+                    Update the title of your column
+                </p>
+            </DialogHeader>
+            <form className="space-y-4" onSubmit={handleUpdateColumn}>
+                <div className="space-y-2">
+                    <Label>Column Title</Label>
+                    <Input
+                        id="columnTitle"
+                        value={editingColumnTitle}
+                        onChange={(e) => setEditingColumnTitle(e.target.value)}
+                        placeholder="Enter column title..."
+                        required
+                    />
+                </div>
+                <div className="space-x-2 flex justify-end">
+                    <Button
+                        type="button"
+                        onClick={() => {
+                            setIsEditingColumn(false);
+                            setEditingColumnTitle("");
+                            setEditingColumn(null);
+                        }}
+                        variant="outline"
+                    >
+                        Cancel
+                    </Button>
+                    <Button type="submit">Edit Column</Button>
+                </div>
+            </form>
+        </DialogContent>
+    </Dialog>
+    </>
     )
 }
