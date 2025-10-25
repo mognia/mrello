@@ -99,14 +99,14 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
             <Navbar/>
             <main className='container mx-auto px-4 py-6 sm:py-8'>
-                <div className='mb-6 sm:mb-8'>
-                    <h1>Welcome back,
-                        {user?.firstName ?? user?.emailAddresses[0].emailAddress}!
+                <div className="mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                        Welcome back,{" "}
+                        {user?.firstName ?? user?.emailAddresses[0].emailAddress}! 👋
                     </h1>
-                    <p className='text-gray-600'>
-                        Here&#39;s what&#39;s happening with your boards today.
+                    <p className="text-gray-600">
+                        Here's what's happening with your boards today.
                     </p>
-
                 </div>
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
