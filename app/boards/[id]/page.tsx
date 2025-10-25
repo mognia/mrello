@@ -278,18 +278,16 @@ function TaskOverlay({ task }: { task: Task }) {
 }
 export default function BoardPage() {
     const {id} = useParams<{ id: string }>();
-    const {board, updateBoard, columns, setColumns,createRealTask,moveTask,updateColumn} = useBoard(id);
+    const {board, updateBoard, columns, setColumns,createRealTask,moveTask,updateColumn,createColumn} = useBoard(id);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [newTitle, setNewTitle] = useState("");
     const [newColor, setNewColor] = useState("");
     const [isEditingColumn, setIsEditingColumn] = useState(false);
     const [newColumnTitle, setNewColumnTitle] = useState("");
     const [editingColumnTitle, setEditingColumnTitle] = useState("");
-    const [editingColumn, setEditingColumn] = useState<ColumnWithTasks | null>(
-        null
-    );
+    const [editingColumn, setEditingColumn] = useState<ColumnWithTasks | null>(null);
+    const [isCreatingColumn, setIsCreatingColumn] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
 
     const [filters, setFilters] = useState({
@@ -481,6 +479,17 @@ export default function BoardPage() {
         setIsEditingColumn(true);
         setEditingColumn(column);
         setEditingColumnTitle(column.title);
+    }
+    async function handleCreateColumn(e: React.FormEvent) {
+        e.preventDefault();
+
+        if (!newColumnTitle.trim()) return;
+
+        await createColumn(newColumnTitle.trim());
+
+        //refresh input and close dialog after creating column
+        setNewColumnTitle("");
+        setIsCreatingColumn(false);
     }
     async function handleUpdateColumn(e: React.FormEvent) {
         e.preventDefault();
@@ -742,6 +751,16 @@ export default function BoardPage() {
                                 </SortableContext>
                             </DroppableColumn>
                         ))}
+                        <div className="w-full lg:flex-shrink-0 lg:w-80">
+                            <Button
+                                variant="outline"
+                                className="w-full h-full min-h-[200px] border-dashed border-2 text-gray-500 hover:text-gray-700"
+                                onClick={() => setIsCreatingColumn(true)}
+                            >
+                                <Plus />
+                                Add another list
+                            </Button>
+                        </div>
                         <DragOverlay>
                             {activeTask ? <TaskOverlay task={activeTask}/> : null}
                         </DragOverlay>
@@ -749,6 +768,38 @@ export default function BoardPage() {
                 </DndContext>
             </main>
         </div>
+            <Dialog open={isCreatingColumn} onOpenChange={setIsCreatingColumn}>
+                <DialogContent className="w-[95vw] max-w-[425px] mx-auto">
+                    <DialogHeader>
+                        <DialogTitle>Create New Column</DialogTitle>
+                        <p className="text-sm text-gray-600">
+                            Add new column to organize your tasks
+                        </p>
+                    </DialogHeader>
+                    <form className="space-y-4" onSubmit={handleCreateColumn}>
+                        <div className="space-y-2">
+                            <Label>Column Title</Label>
+                            <Input
+                                id="columnTitle"
+                                value={newColumnTitle}
+                                onChange={(e) => setNewColumnTitle(e.target.value)}
+                                placeholder="Enter column title..."
+                                required
+                            />
+                        </div>
+                        <div className="space-x-2 flex justify-end">
+                            <Button
+                                type="button"
+                                onClick={() => setIsCreatingColumn(false)}
+                                variant="outline"
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="submit">Create Column</Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
     <Dialog open={isEditingColumn} onOpenChange={setIsEditingColumn}>
         <DialogContent className="w-[95vw] max-w-[425px] mx-auto">
             <DialogHeader>
